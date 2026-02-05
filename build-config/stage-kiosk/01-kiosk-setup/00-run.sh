@@ -3,10 +3,22 @@
 # Main kiosk setup script
 # This script configures the kiosk system during image build
 
-on_chroot << EOF
-# Create kiosk directory structure
-mkdir -p /opt/kiosk/{images,scripts,logs}
+# Copy image files from centralized location
+# stage-kiosk is symlinked from pi-gen/, so ../image-files points to project root
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IMAGE_FILES_DIR="$(cd "${SCRIPT_DIR}/../../../image-files" && pwd)"
 
+# Create directory structure in rootfs
+mkdir -p "${ROOTFS_DIR}/opt/kiosk/"{images,scripts,logs}
+mkdir -p "${ROOTFS_DIR}/etc/systemd/system"
+
+# Copy kiosk scripts
+cp "${IMAGE_FILES_DIR}/opt/kiosk/scripts/"*.sh "${ROOTFS_DIR}/opt/kiosk/scripts/"
+
+# Copy systemd service
+cp "${IMAGE_FILES_DIR}/etc/systemd/system/kiosk-display.service" "${ROOTFS_DIR}/etc/systemd/system/"
+
+on_chroot << EOF
 # Set ownership and permissions
 chown -R ${FIRST_USER_NAME}:${FIRST_USER_NAME} /opt/kiosk
 chmod 755 /opt/kiosk/scripts/*.sh

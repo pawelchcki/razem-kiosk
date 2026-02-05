@@ -45,18 +45,18 @@ echo ""
 
 echo "Step 4: Copying configuration files..."
 
-# Copy scripts
-cp "$REPO_ROOT/scripts/image-viewer.sh" "$INSTALL_DIR/scripts/"
+# Copy scripts from image-files directory
+cp "$REPO_ROOT/image-files/opt/kiosk/scripts/image-viewer.sh" "$INSTALL_DIR/scripts/"
 chmod +x "$INSTALL_DIR/scripts/image-viewer.sh"
 
-cp "$REPO_ROOT/configs/overlayfs-setup.sh" "$INSTALL_DIR/scripts/"
+cp "$REPO_ROOT/image-files/opt/kiosk/scripts/overlayfs-setup.sh" "$INSTALL_DIR/scripts/"
 chmod +x "$INSTALL_DIR/scripts/overlayfs-setup.sh"
 
 # Create symlink for easy access
 ln -sf "$INSTALL_DIR/scripts/overlayfs-setup.sh" /usr/local/bin/kiosk-overlay
 
-# Copy systemd service
-cp "$REPO_ROOT/systemd/kiosk-display.service" /etc/systemd/system/
+# Copy systemd service from image-files directory
+cp "$REPO_ROOT/image-files/etc/systemd/system/kiosk-display.service" /etc/systemd/system/
 systemctl daemon-reload
 
 echo ""

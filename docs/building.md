@@ -278,17 +278,23 @@ stage-kiosk/
 ├── 00-packages/
 │   └── 00-packages.sh          # Install packages
 ├── 01-kiosk-setup/
-│   ├── 00-run.sh               # Main setup script
-│   └── files/                  # Files to copy into image
-│       ├── opt/kiosk/scripts/
-│       ├── etc/systemd/system/
-│       └── boot/firmware/
+│   └── 00-run.sh               # Main setup script (copies from image-files/)
 ├── 02-overlay-setup/
 │   └── 00-run.sh               # Overlay filesystem setup
 └── prerun.sh                   # Stage dependencies
 ```
 
-After modifying, rebuild the image.
+Files that go into the image are in `image-files/`:
+```
+image-files/
+├── opt/kiosk/scripts/
+│   ├── image-viewer.sh
+│   └── overlayfs-setup.sh
+└── etc/systemd/system/
+    └── kiosk-display.service
+```
+
+After modifying stage scripts or image files, rebuild the image.
 
 ## Build Time Optimization
 

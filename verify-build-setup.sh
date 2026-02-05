@@ -33,13 +33,28 @@ REQUIRED_FILES=(
     "build-config/stage-kiosk/prerun.sh"
     "build-config/stage-kiosk/00-packages/00-packages.sh"
     "build-config/stage-kiosk/01-kiosk-setup/00-run.sh"
-    "build-config/stage-kiosk/01-kiosk-setup/files/opt/kiosk/scripts/image-viewer.sh"
-    "build-config/stage-kiosk/01-kiosk-setup/files/opt/kiosk/scripts/overlayfs-setup.sh"
-    "build-config/stage-kiosk/01-kiosk-setup/files/etc/systemd/system/kiosk-display.service"
     "build-config/stage-kiosk/02-overlay-setup/00-run.sh"
 )
 
 for file in "${REQUIRED_FILES[@]}"; do
+    if [ -f "$file" ]; then
+        echo "  ✓ $file"
+    else
+        echo "  ✗ $file missing"
+        EXIT_CODE=1
+    fi
+done
+
+# Check image-files structure
+echo ""
+echo "Checking image-files structure..."
+IMAGE_FILES=(
+    "image-files/opt/kiosk/scripts/image-viewer.sh"
+    "image-files/opt/kiosk/scripts/overlayfs-setup.sh"
+    "image-files/etc/systemd/system/kiosk-display.service"
+)
+
+for file in "${IMAGE_FILES[@]}"; do
     if [ -f "$file" ]; then
         echo "  ✓ $file"
     else

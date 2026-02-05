@@ -195,6 +195,7 @@ sudo reboot
 razem-kiosk/
 ├── README.md                    # This file
 ├── build.sh                     # Image builder wrapper script
+├── verify-build-setup.sh        # Verification script for build setup
 ├── docs/
 │   ├── installation.md          # Installation guide (image + manual)
 │   ├── building.md              # Image building guide
@@ -203,18 +204,17 @@ razem-kiosk/
 │   ├── config                   # Main pi-gen settings
 │   └── stage-kiosk/             # Custom kiosk stage
 │       ├── 00-packages/         # Package installation
-│       ├── 01-kiosk-setup/      # Kiosk configuration
+│       ├── 01-kiosk-setup/      # Kiosk configuration (copies from image-files/)
 │       └── 02-overlay-setup/    # Read-only filesystem setup
+├── image-files/                 # Files that go into the built image
+│   ├── opt/kiosk/scripts/       # Kiosk scripts (image-viewer.sh, overlayfs-setup.sh)
+│   └── etc/systemd/system/      # Systemd service (kiosk-display.service)
 ├── pi-gen/                      # Official Pi image builder (submodule)
-├── configs/
-│   ├── cmdline.txt              # Boot parameters (silent boot)
-│   ├── config.txt               # Pi hardware configuration
-│   └── overlayfs-setup.sh       # Read-only filesystem management
+├── configs/                     # Reference boot configurations
+│   ├── cmdline.txt              # Boot parameters reference
+│   └── config.txt               # Pi hardware configuration reference
 ├── scripts/
-│   ├── install-kiosk.sh         # Manual installation script
-│   └── image-viewer.sh          # FBI wrapper with keyboard handling
-├── systemd/
-│   └── kiosk-display.service    # Auto-start service definition
+│   └── install-kiosk.sh         # Manual installation script
 └── images/
     └── .gitkeep                 # Placeholder for image directory
 ```
