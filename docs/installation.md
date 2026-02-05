@@ -2,6 +2,13 @@
 
 This guide provides step-by-step instructions for setting up the Raspberry Pi Kiosk display system.
 
+## Two Installation Methods
+
+Choose the method that best fits your needs:
+
+1. **Pre-Built Image (Recommended)** - Flash and boot, no installation needed
+2. **Manual Installation** - Install on existing Raspberry Pi OS
+
 ## Hardware Requirements
 
 - **Raspberry Pi 4** (Model B recommended)
@@ -10,23 +17,128 @@ This guide provides step-by-step instructions for setting up the Raspberry Pi Ki
 - **USB Keyboard**: For image navigation
 - **Power Supply**: Official Raspberry Pi 4 power supply recommended
 
-## Software Requirements
+---
 
-- **Raspberry Pi OS Lite (64-bit)**: Bookworm or later recommended
-- **Internet connection**: For initial setup only
+## Method 1: Pre-Built Image (Recommended)
+
+### Step 1: Download the Kiosk Image
+
+1. Download the latest **razem-kiosk** image:
+   - From GitHub Releases: `https://github.com/yourusername/razem-kiosk/releases`
+   - File: `razem-kiosk-YYYY-MM-DD.img.zip`
+
+2. Extract the `.img` file from the zip archive
+
+### Step 2: Flash the Image
+
+**Using Raspberry Pi Imager (Recommended):**
+
+1. Download and install [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+2. Insert SD card into your computer
+3. Open Raspberry Pi Imager
+4. Click **"Choose OS"** → **"Use custom"**
+5. Select the extracted `razem-kiosk-*.img` file
+6. Click **"Choose Storage"** → Select your SD card
+7. Click **"Write"** and wait for completion
+
+**Using Command Line (Linux/macOS):**
+
+```bash
+# Find your SD card device
+lsblk  # or diskutil list on macOS
+
+# Flash image (replace /dev/sdX with your SD card)
+sudo dd if=razem-kiosk-*.img of=/dev/sdX bs=4M status=progress conv=fsync
+
+# On macOS:
+sudo dd if=razem-kiosk-*.img of=/dev/rdiskX bs=4m
+```
+
+**Using Balena Etcher:**
+
+1. Download [Balena Etcher](https://www.balena.io/etcher/)
+2. Select image file
+3. Select SD card
+4. Click "Flash!"
+
+### Step 3: First Boot
+
+1. Insert SD card into Raspberry Pi
+2. Connect HDMI display and USB keyboard
+3. Connect power supply
+4. Wait for boot (silent boot, no console messages)
+5. System will display a message that no images are found
+
+**Default Credentials:**
+- Username: `pi`
+- Password: `raspberry`
+- Hostname: `kiosk.local`
+
+⚠️ **IMPORTANT**: Change the default password on first login!
+
+### Step 4: Add Your Images
+
+**Via SSH (Recommended):**
+
+```bash
+# From your computer, connect via SSH
+ssh pi@kiosk.local
+
+# Change password
+passwd
+
+# Copy images from USB drive
+sudo mount /dev/sda1 /mnt
+sudo cp /mnt/images/*.jpg /opt/kiosk/images/
+sudo umount /mnt
+
+# Or copy via SCP from your computer:
+# scp *.jpg pi@kiosk.local:/tmp/
+# sudo mv /tmp/*.jpg /opt/kiosk/images/
+```
+
+**Via USB Drive (No Network):**
+
+1. Press **Alt+F2** to switch to console
+2. Login as `pi`
+3. Mount USB drive:
+   ```bash
+   sudo mount /dev/sda1 /mnt
+   sudo cp /mnt/images/*.jpg /opt/kiosk/images/
+   sudo umount /mnt
+   ```
+4. Restart service:
+   ```bash
+   sudo systemctl restart kiosk-display.service
+   ```
+5. Press **Alt+F1** to return to viewer
+
+### Step 5: Enable Read-Only Protection
+
+After testing that everything works:
+
+```bash
+ssh pi@kiosk.local
+sudo kiosk-overlay enable
+sudo reboot
+```
+
+Your kiosk is now ready for production use!
 
 ---
 
-## Part 1: Prepare the SD Card
+## Method 2: Manual Installation on Existing OS
 
-### Step 1: Download Raspberry Pi OS Lite
+### Part 1: Prepare the SD Card
+
+#### Step 1: Download Raspberry Pi OS Lite
 
 1. Download **Raspberry Pi OS Lite (64-bit)** from:
    https://www.raspberrypi.com/software/operating-systems/
 
 2. Use **Raspberry Pi Imager** or **Balena Etcher** to write the image to your SD card
 
-### Step 2: Configure Initial Settings (Optional)
+#### Step 2: Configure Initial Settings (Optional)
 
 If you want SSH access for remote installation:
 
@@ -45,7 +157,7 @@ network={
 }
 ```
 
-### Step 3: Boot the Raspberry Pi
+#### Step 3: Boot the Raspberry Pi
 
 1. Insert the SD card into your Raspberry Pi
 2. Connect keyboard, display, and power
@@ -61,9 +173,9 @@ network={
 
 ---
 
-## Part 2: Install Kiosk Software
+### Part 2: Install Kiosk Software
 
-### Option A: Automated Installation (Recommended)
+#### Option A: Automated Installation (Recommended)
 
 If the repository is publicly available:
 
@@ -72,7 +184,7 @@ If the repository is publicly available:
 curl -sSL https://raw.githubusercontent.com/yourusername/razem-kiosk/main/scripts/install-kiosk.sh | sudo bash
 ```
 
-### Option B: Manual Installation
+#### Option B: Manual Installation
 
 If installing from a local copy:
 
@@ -90,7 +202,7 @@ cd razem-kiosk
 sudo ./scripts/install-kiosk.sh
 ```
 
-### Option C: USB Drive Installation (No Internet Required)
+#### Option C: USB Drive Installation (No Internet Required)
 
 1. Copy the entire `razem-kiosk` folder to a USB drive
 2. Insert USB drive into Raspberry Pi
@@ -107,7 +219,7 @@ sudo ./scripts/install-kiosk.sh
 
 ---
 
-## Part 3: Add Your Images
+### Part 3: Add Your Images
 
 ### Step 1: Prepare Images
 
@@ -154,7 +266,7 @@ sudo chmod -R 644 /opt/kiosk/images/*.jpg
 
 ---
 
-## Part 4: Test the System
+### Part 4: Test the System
 
 ### Step 1: Test Image Viewer Manually
 
@@ -192,7 +304,7 @@ After reboot, the image viewer should start automatically.
 
 ---
 
-## Part 5: Enable Read-Only Mode (Production)
+### Part 5: Enable Read-Only Mode (Production)
 
 ⚠️ **IMPORTANT**: Only enable read-only mode after thoroughly testing!
 
@@ -228,7 +340,7 @@ ls -l /home/pi/  # File should be gone after reboot
 
 ---
 
-## Part 6: Maintenance
+## Maintenance (Both Methods)
 
 ### Updating Images (With Overlay Enabled)
 

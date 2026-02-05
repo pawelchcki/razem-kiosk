@@ -23,50 +23,82 @@ Perfect for digital signage, information displays, and kiosk applications.
 
 ## Quick Start
 
-### 1. Flash Raspberry Pi OS Lite
+### Option 1: Pre-Built Image (Recommended)
 
-Download and flash **Raspberry Pi OS Lite (64-bit)** to your SD card:
-https://www.raspberrypi.com/software/operating-systems/
+**Fastest way to get started - just flash and boot!**
 
-### 2. Boot and Install
+1. **Download** the latest pre-built image:
+   - [Get latest release](https://github.com/razem/razem-kiosk/releases)
+   - File: `razem-kiosk-YYYY-MM-DD.img.zip`
 
-Boot your Raspberry Pi and run:
+2. **Flash** to SD card using [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
+   - Choose OS → Use custom → Select downloaded `.img` file
+   - Choose Storage → Select your SD card
+   - Write
+
+3. **Boot** your Raspberry Pi (boots directly to kiosk, no installation needed!)
+
+4. **Add images** via SSH:
+   ```bash
+   ssh pi@kiosk.local  # password: raspberry
+   sudo cp /path/to/images/*.jpg /opt/kiosk/images/
+   sudo systemctl restart kiosk-display.service
+   ```
+
+5. **Enable immortal mode**:
+   ```bash
+   sudo kiosk-overlay enable
+   sudo reboot
+   ```
+
+Done! Your kiosk is ready and immortal.
+
+### Option 2: Manual Installation
+
+If you prefer to install on existing Raspberry Pi OS:
+
+1. **Flash Raspberry Pi OS Lite (64-bit)** to your SD card:
+   https://www.raspberrypi.com/software/operating-systems/
+
+2. **Boot and install**:
+   ```bash
+   git clone https://github.com/razem/razem-kiosk.git
+   cd razem-kiosk
+   sudo ./scripts/install-kiosk.sh
+   ```
+
+3. **Add images**:
+   ```bash
+   sudo cp /path/to/images/*.jpg /opt/kiosk/images/
+   ```
+
+4. **Test**:
+   ```bash
+   sudo systemctl start kiosk-display.service
+   ```
+
+5. **Enable immortal mode**:
+   ```bash
+   sudo kiosk-overlay enable
+   sudo reboot
+   ```
+
+## Building Custom Image
+
+Want to customize the image or build your own?
 
 ```bash
-# Clone repository
-git clone https://github.com/razem/razem-kiosk.git
+# Clone with submodules
+git clone --recursive https://github.com/razem/razem-kiosk.git
 cd razem-kiosk
-sudo ./scripts/install-kiosk.sh
+
+# Build image (requires Docker, ~30-60 minutes)
+./build.sh
+
+# Output: razem-kiosk-YYYY-MM-DD.img
 ```
 
-### 3. Add Images
-
-Copy your images to the kiosk:
-
-```bash
-sudo cp /path/to/images/*.jpg /opt/kiosk/images/
-```
-
-### 4. Test
-
-Start the viewer:
-
-```bash
-sudo systemctl start kiosk-display.service
-```
-
-Use **arrow keys** to navigate images.
-
-### 5. Enable Immortal Mode
-
-Once everything works, enable read-only filesystem:
-
-```bash
-sudo kiosk-overlay enable
-sudo reboot
-```
-
-Your kiosk is now immortal - it can survive power loss without corruption!
+See [Building Guide](docs/building.md) for detailed instructions.
 
 ## How It Works
 
@@ -153,7 +185,8 @@ sudo reboot
 
 ## Documentation
 
-- **[Installation Guide](docs/installation.md)**: Complete step-by-step setup instructions
+- **[Installation Guide](docs/installation.md)**: Complete setup instructions (both pre-built image and manual)
+- **[Building Guide](docs/building.md)**: How to build custom images using pi-gen
 - **[Maintenance Guide](docs/maintenance.md)**: Updating images, system updates, troubleshooting
 
 ## Directory Structure
@@ -161,15 +194,24 @@ sudo reboot
 ```
 razem-kiosk/
 ├── README.md                    # This file
+├── build.sh                     # Image builder wrapper script
 ├── docs/
-│   ├── installation.md          # Detailed installation guide
+│   ├── installation.md          # Installation guide (image + manual)
+│   ├── building.md              # Image building guide
 │   └── maintenance.md           # Maintenance and troubleshooting
+├── build-config/                # pi-gen build configuration
+│   ├── config                   # Main pi-gen settings
+│   └── stage-kiosk/             # Custom kiosk stage
+│       ├── 00-packages/         # Package installation
+│       ├── 01-kiosk-setup/      # Kiosk configuration
+│       └── 02-overlay-setup/    # Read-only filesystem setup
+├── pi-gen/                      # Official Pi image builder (submodule)
 ├── configs/
 │   ├── cmdline.txt              # Boot parameters (silent boot)
 │   ├── config.txt               # Pi hardware configuration
 │   └── overlayfs-setup.sh       # Read-only filesystem management
 ├── scripts/
-│   ├── install-kiosk.sh         # Master installation script
+│   ├── install-kiosk.sh         # Manual installation script
 │   └── image-viewer.sh          # FBI wrapper with keyboard handling
 ├── systemd/
 │   └── kiosk-display.service    # Auto-start service definition
@@ -283,7 +325,7 @@ Possible improvements (not currently implemented):
 - [ ] WiFi-based image sync
 - [ ] Video playback support
 - [ ] Multi-display support
-- [ ] Pre-built SD card images
+- [x] Pre-built SD card images (available now!)
 
 ## Contributing
 

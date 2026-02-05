@@ -1,0 +1,23 @@
+# Pi-gen build artifacts
+pi-gen/work/
+pi-gen/deploy/
+pi-gen/stage-kiosk
+
+# Built images
+*.img
+*.img.zip
+*.img.xz
+
+# Temporary files
+*.log
+*.tmp
+*~
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

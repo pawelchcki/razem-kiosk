@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# Razem Kiosk - pi-gen Configuration
+# This file configures the Raspberry Pi OS image build
+
+# Image name and release
+IMG_NAME='razem-kiosk'
+RELEASE='bookworm'
+DEPLOY_COMPRESSION='zip'
+
+# Target system configuration
+TARGET_HOSTNAME='kiosk'
+TIMEZONE_DEFAULT='Europe/Warsaw'
+LOCALE_DEFAULT='en_US.UTF-8'
+KEYBOARD_KEYMAP='us'
+KEYBOARD_LAYOUT='English (US)'
+
+# Enable SSH for maintenance access
+ENABLE_SSH=1
+
+# Set default username/password (user should change after first boot)
+FIRST_USER_NAME='pi'
+FIRST_USER_PASS='raspberry'
+
+# Stage selection - skip desktop stages for minimal image
+STAGE_LIST="stage0 stage1 stage2 stage-kiosk"
+
+# Build options
+CLEAN=1
+
+# Disable IPv6 (reduces boot time)
+DISABLE_IPV6=1
+
+# WPA supplicant country (for WiFi, though we disable it)
+WPA_COUNTRY='PL'
+
+# Reduce image size
+ENABLE_REDUCE_IMAGE=1
