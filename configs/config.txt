@@ -1,0 +1,29 @@
+# Raspberry Pi Kiosk Display Configuration
+
+[all]
+# GPU Memory (enough for framebuffer image display)
+gpu_mem=256
+
+# HDMI Configuration
+hdmi_force_hotplug=1
+disable_overscan=1
+
+# Disable unused hardware to speed up boot
+dtoverlay=disable-bt
+# Uncomment to disable WiFi if not needed for remote management
+# dtoverlay=disable-wifi
+
+# Disable audio if not needed
+dtparam=audio=off
+
+# Disable camera if not needed
+start_x=0
+
+# Boot optimizations
+boot_delay=0
+disable_splash=1
+
+# Framebuffer configuration
+framebuffer_width=1920
+framebuffer_height=1080
+framebuffer_depth=24
