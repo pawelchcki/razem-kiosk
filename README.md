@@ -188,6 +188,7 @@ sudo reboot
 - **[Installation Guide](docs/installation.md)**: Complete setup instructions (both pre-built image and manual)
 - **[Building Guide](docs/building.md)**: How to build custom images using pi-gen
 - **[Maintenance Guide](docs/maintenance.md)**: Updating images, system updates, troubleshooting
+- **[Nix Guide](docs/nix.md)**: Using Nix for development and code formatting
 
 ## Directory Structure
 
