@@ -4,6 +4,39 @@ set -e
 # Razem Kiosk Image Builder
 # Wrapper script to simplify building custom Raspberry Pi OS image with kiosk system
 
+# Show usage
+show_usage() {
+  echo "Usage: $0 [OPTIONS]"
+  echo ""
+  echo "Options:"
+  echo "  -y, --yes    Skip confirmation prompt"
+  echo "  -h, --help   Show this help message"
+  echo ""
+  echo "Example:"
+  echo "  $0           # Interactive build (asks for confirmation)"
+  echo "  $0 -y        # Non-interactive build (auto-confirm)"
+}
+
+# Parse arguments
+SKIP_CONFIRM=false
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    -y|--yes)
+      SKIP_CONFIRM=true
+      shift
+      ;;
+    -h|--help)
+      show_usage
+      exit 0
+      ;;
+    *)
+      echo "Unknown option: $1"
+      show_usage
+      exit 1
+      ;;
+  esac
+done
+
 echo "=================================="
 echo "Razem Kiosk Image Builder"
 echo "=================================="
@@ -34,12 +67,16 @@ echo "  Stages: stage0, stage1, stage2, stage-kiosk"
 echo "  Build method: $BUILD_METHOD"
 echo ""
 
-# Ask for confirmation
-read -p "Start build? This will take 30-60 minutes. [y/N] " -n 1 -r
-echo
-if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    echo "Build cancelled."
-    exit 0
+# Ask for confirmation (unless -y flag is used)
+if [ "$SKIP_CONFIRM" = false ]; then
+    read -p "Start build? This will take 30-60 minutes. [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Build cancelled."
+        exit 0
+    fi
+else
+    echo "Auto-confirmed with -y flag. Starting build..."
 fi
 
 echo ""
