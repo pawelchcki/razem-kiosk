@@ -4,8 +4,6 @@ on:
   push:
     branches: [main, fedora-iot]
   workflow_dispatch:  # Manual trigger
-  schedule:
-    - cron: '0 2 * * 0'  # Weekly Sunday 2 AM UTC
 
 jobs:
   build-fedora-iot:
