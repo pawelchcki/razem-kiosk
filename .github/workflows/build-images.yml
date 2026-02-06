@@ -55,8 +55,8 @@ jobs:
 
   build-raspberry-pi-os:
     name: Build Raspberry Pi OS Image
-    runs-on: ubuntu-24.04-arm
-    timeout-minutes: 60
+    runs-on: ubuntu-latest  # Must use x86_64 for pi-gen cross-compilation
+    timeout-minutes: 90
 
     steps:
       - name: Checkout code with submodules
