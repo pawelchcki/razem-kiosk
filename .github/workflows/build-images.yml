@@ -10,26 +10,21 @@ on:
 jobs:
   build-fedora-iot:
     name: Build Fedora IoT Container
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Set up QEMU for ARM64
-        uses: docker/setup-qemu-action@v3
-        with:
-          platforms: arm64
 
       - name: Install Podman
         run: |
           sudo apt-get update
           sudo apt-get install -y podman
 
-      - name: Build Fedora IoT Container
+      - name: Build Fedora IoT Container (native ARM64)
         run: |
-          podman build --platform=linux/arm64 --isolation=chroot \
+          podman build --isolation=chroot \
             -f build-config-fedora/Containerfile \
             -t razem-kiosk-fedora:${{ github.sha }} .
 
@@ -60,8 +55,8 @@ jobs:
 
   build-raspberry-pi-os:
     name: Build Raspberry Pi OS Image
-    runs-on: ubuntu-latest
-    timeout-minutes: 120
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 60
 
     steps:
       - name: Checkout code with submodules
