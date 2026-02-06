@@ -9,18 +9,26 @@ show_usage() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   echo "Options:"
+  echo "  -f, --fedora Build Fedora IoT image instead of Raspberry Pi OS"
   echo "  -y, --yes    Skip confirmation prompt"
   echo "  -h, --help   Show this help message"
   echo ""
-  echo "Example:"
-  echo "  $0           # Interactive build (asks for confirmation)"
-  echo "  $0 -y        # Non-interactive build (auto-confirm)"
+  echo "Examples:"
+  echo "  $0           # Build Raspberry Pi OS image (interactive)"
+  echo "  $0 -y        # Build Raspberry Pi OS image (non-interactive)"
+  echo "  $0 --fedora  # Build Fedora IoT image (interactive)"
+  echo "  $0 -f -y     # Build Fedora IoT image (non-interactive)"
 }
 
 # Parse arguments
 SKIP_CONFIRM=false
+FEDORA_BUILD=false
 while [[ $# -gt 0 ]]; do
   case $1 in
+    -f|--fedora)
+      FEDORA_BUILD=true
+      shift
+      ;;
     -y|--yes)
       SKIP_CONFIRM=true
       shift
@@ -36,6 +44,16 @@ while [[ $# -gt 0 ]]; do
       ;;
   esac
 done
+
+# Route to Fedora build if requested
+if [ "$FEDORA_BUILD" = true ]; then
+  echo "Building Fedora IoT image..."
+  if [ "$SKIP_CONFIRM" = true ]; then
+    exec ./build-fedora.sh --non-interactive
+  else
+    exec ./build-fedora.sh
+  fi
+fi
 
 echo "=================================="
 echo "Razem Kiosk Image Builder"

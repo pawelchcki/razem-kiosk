@@ -2,26 +2,41 @@
 
 This guide provides step-by-step instructions for setting up the Raspberry Pi Kiosk display system.
 
-## Two Installation Methods
+## Distribution Choice
+
+Choose your distribution:
+- **Raspberry Pi OS (Debian)** - Best for Pi 4, familiar environment
+- **Fedora IoT (RPM)** - Best for Pi 3+, built-in immutability, modern updates
+
+## Installation Methods
 
 Choose the method that best fits your needs:
 
 1. **Pre-Built Image (Recommended)** - Flash and boot, no installation needed
-2. **Manual Installation** - Install on existing Raspberry Pi OS
+2. **Manual Installation** - Install on existing system
 
 ## Hardware Requirements
 
-- **Raspberry Pi 4** (Model B recommended)
+- **Raspberry Pi**:
+  - Raspberry Pi 3B/3B+ (64-bit, 1GB RAM)
+  - Raspberry Pi 4 Model B (2GB+ RAM recommended)
+  - Raspberry Pi 400
 - **SD Card**: 8GB minimum, 16GB recommended
 - **Display**: HDMI-compatible monitor or TV
 - **USB Keyboard**: For image navigation
-- **Power Supply**: Official Raspberry Pi 4 power supply recommended
+- **Power Supply**: Official Raspberry Pi power supply (3A for Pi 4, 2.5A for Pi 3+)
 
 ---
 
 ## Method 1: Pre-Built Image (Recommended)
 
-### Step 1: Download the Kiosk Image
+### Choose Your Distribution
+
+#### Option A: Raspberry Pi OS Image
+
+Best for Pi 4, familiar Debian environment.
+
+**Step 1: Download the Kiosk Image**
 
 1. Download the latest **razem-kiosk** image:
    - From GitHub Releases: `https://github.com/yourusername/razem-kiosk/releases`
@@ -29,7 +44,21 @@ Choose the method that best fits your needs:
 
 2. Extract the `.img` file from the zip archive
 
+#### Option B: Fedora IoT Image
+
+Best for Pi 3+, built-in immutability, modern updates.
+
+**Step 1: Download the Fedora IoT Kiosk Image**
+
+1. Download the latest **razem-kiosk-fedora** image:
+   - From GitHub Releases: `https://github.com/yourusername/razem-kiosk/releases`
+   - File: `razem-kiosk-fedora-YYYY-MM-DD.raw.xz`
+
+2. Image is compressed with xz (will extract during flashing)
+
 ### Step 2: Flash the Image
+
+#### For Raspberry Pi OS (.img file):
 
 **Using Raspberry Pi Imager (Recommended):**
 
@@ -54,12 +83,31 @@ sudo dd if=razem-kiosk-*.img of=/dev/sdX bs=4M status=progress conv=fsync
 sudo dd if=razem-kiosk-*.img of=/dev/rdiskX bs=4m
 ```
 
-**Using Balena Etcher:**
+#### For Fedora IoT (.raw.xz file):
+
+**Using Command Line (Recommended):**
+
+```bash
+# Find your SD card device
+lsblk  # Look for your SD card (e.g., /dev/sdb)
+
+# Option 1: Extract then flash
+xz -d razem-kiosk-fedora-*.raw.xz
+sudo dd if=razem-kiosk-fedora-*.raw of=/dev/sdX bs=4M status=progress conv=fsync
+
+# Option 2: Stream directly (saves disk space)
+xz -dc razem-kiosk-fedora-*.raw.xz | sudo dd of=/dev/sdX bs=4M status=progress conv=fsync
+
+# Sync to ensure all data is written
+sudo sync
+```
+
+**Using Balena Etcher (All Images):**
 
 1. Download [Balena Etcher](https://www.balena.io/etcher/)
-2. Select image file
+2. Select image file (.img or .raw.xz)
 3. Select SD card
-4. Click "Flash!"
+4. Click "Flash!" (Etcher handles compressed files automatically)
 
 ### Step 3: First Boot
 
@@ -69,12 +117,16 @@ sudo dd if=razem-kiosk-*.img of=/dev/rdiskX bs=4m
 4. Wait for boot (silent boot, no console messages)
 5. System will display a message that no images are found
 
-**Default Credentials:**
+**Default Credentials (Both Distributions):**
 - Username: `pi`
 - Password: `raspberry`
 - Hostname: `kiosk.local`
 
 ⚠️ **IMPORTANT**: Change the default password on first login!
+
+**Boot Differences:**
+- **Raspberry Pi OS**: ~20-30 seconds to kiosk display
+- **Fedora IoT**: ~30-45 seconds first boot (ostree setup), ~20 seconds subsequent boots
 
 ### Step 4: Add Your Images
 
@@ -115,6 +167,8 @@ sudo umount /mnt
 
 ### Step 5: Enable Read-Only Protection
 
+#### Raspberry Pi OS:
+
 After testing that everything works:
 
 ```bash
@@ -123,20 +177,52 @@ sudo kiosk-overlay enable
 sudo reboot
 ```
 
-Your kiosk is now ready for production use!
+Your kiosk is now in immortal mode (read-only overlay filesystem)!
+
+#### Fedora IoT:
+
+System is **already immutable** via rpm-ostree! No additional setup needed.
+
+To check immutability status:
+
+```bash
+ssh pi@kiosk.local
+sudo kiosk-overlay status
+# or
+rpm-ostree status
+```
+
+Your kiosk is ready for production use!
 
 ---
 
 ## Method 2: Manual Installation on Existing OS
 
-### Part 1: Prepare the SD Card
+### Option A: Install on Raspberry Pi OS
 
-#### Step 1: Download Raspberry Pi OS Lite
+#### Part 1: Prepare the SD Card
+
+**Step 1: Download Raspberry Pi OS Lite**
 
 1. Download **Raspberry Pi OS Lite (64-bit)** from:
    https://www.raspberrypi.com/software/operating-systems/
 
 2. Use **Raspberry Pi Imager** or **Balena Etcher** to write the image to your SD card
+
+### Option B: Install on Fedora IoT
+
+#### Part 1: Prepare the SD Card
+
+**Step 1: Download Fedora IoT ARM**
+
+1. Download **Fedora IoT ARM aarch64** from:
+   https://fedoraproject.org/iot/download
+
+2. Extract and flash to SD card:
+   ```bash
+   xz -d Fedora-IoT-*.raw.xz
+   sudo dd if=Fedora-IoT-*.raw of=/dev/sdX bs=4M status=progress conv=fsync
+   ```
 
 #### Step 2: Configure Initial Settings (Optional)
 
@@ -175,7 +261,9 @@ network={
 
 ### Part 2: Install Kiosk Software
 
-#### Option A: Automated Installation (Recommended)
+#### For Raspberry Pi OS:
+
+**Automated Installation (Recommended):**
 
 If the repository is publicly available:
 
@@ -184,13 +272,48 @@ If the repository is publicly available:
 curl -sSL https://raw.githubusercontent.com/yourusername/razem-kiosk/main/scripts/install-kiosk.sh | sudo bash
 ```
 
-#### Option B: Manual Installation
+**Manual Installation:**
 
 If installing from a local copy:
 
 ```bash
 # Install git
 sudo apt-get update
+sudo apt-get install -y git
+
+# Clone repository
+git clone https://github.com/yourusername/razem-kiosk.git
+cd razem-kiosk
+
+# Run installer
+sudo ./scripts/install-kiosk.sh
+```
+
+#### For Fedora IoT:
+
+**Manual Installation (Required):**
+
+```bash
+# Install git (if not present)
+sudo rpm-ostree install git
+sudo systemctl reboot
+
+# After reboot, clone repository
+git clone https://github.com/yourusername/razem-kiosk.git
+cd razem-kiosk
+
+# Run Fedora installer
+sudo ./scripts/install-kiosk-fedora.sh
+
+# Reboot to apply rpm-ostree changes
+sudo systemctl reboot
+
+# After reboot, run installer again to complete setup
+cd razem-kiosk
+sudo ./scripts/install-kiosk-fedora.sh
+```
+
+**Note for Fedora IoT**: The installer must be run twice - once to install packages (requires reboot), then again to configure the system.
 sudo apt-get install -y git
 
 # Clone repository
@@ -460,8 +583,14 @@ If you need console access while viewer is running:
    ```bash
    which fbi
    ```
+   **Raspberry Pi OS**: Should show `/usr/bin/fbi`
+   **Fedora IoT**: Should show `/usr/bin/fbi`
 
-### Can't Boot After Enabling Overlay
+   If not found:
+   - Raspberry Pi OS: `sudo apt-get install fbi`
+   - Fedora IoT: `sudo rpm-ostree install fbida && sudo systemctl reboot`
+
+### Can't Boot After Enabling Overlay (Raspberry Pi OS Only)
 
 **Problem**: System won't boot after enabling read-only mode.
 
@@ -474,6 +603,81 @@ If you need console access while viewer is running:
 
 2. Or add kernel parameter at boot:
    - Press Shift during boot to access boot menu
+
+**Note**: Fedora IoT doesn't use boot=overlay. System immutability is managed via rpm-ostree and cannot cause boot failures.
+
+### Fedora IoT Specific Issues
+
+#### Framebuffer Device Not Found
+
+**Problem**: `ERROR: No framebuffer device found` in logs.
+
+**Solution**:
+Check if VC4 graphics driver is loaded:
+```bash
+# Check for framebuffer
+ls -la /dev/fb*
+
+# Check kernel modules
+lsmod | grep vc4
+
+# If missing, add to /etc/modules-load.d/vc4.conf
+echo "vc4" | sudo tee /etc/modules-load.d/vc4.conf
+sudo systemctl reboot
+```
+
+#### SELinux Denials
+
+**Problem**: Service fails with "Permission denied" errors.
+
+**Solution**:
+```bash
+# Check SELinux status
+getenforce
+
+# View denials
+sudo ausearch -m avc -ts recent
+
+# Fix contexts
+sudo restorecon -R /opt/kiosk/
+
+# If persistent issues, create policy or set permissive mode (not recommended for production)
+# sudo setenforce 0
+```
+
+#### rpm-ostree Package Installation Failed
+
+**Problem**: `rpm-ostree install` fails or hangs.
+
+**Solution**:
+```bash
+# Check rpm-ostree status
+rpm-ostree status
+
+# Cancel pending deployment
+rpm-ostree cleanup -p
+
+# Try installation again
+sudo rpm-ostree install fbida kbd
+sudo systemctl reboot
+```
+
+#### System Updates Breaking Kiosk
+
+**Problem**: After `rpm-ostree upgrade`, kiosk stops working.
+
+**Solution**:
+```bash
+# Rollback to previous deployment
+rpm-ostree rollback
+sudo systemctl reboot
+
+# After reboot, check what changed
+rpm-ostree db diff
+
+# Fix issues, then upgrade again
+sudo rpm-ostree upgrade
+```
    - Add `nooverlay` to kernel command line
 
 ---

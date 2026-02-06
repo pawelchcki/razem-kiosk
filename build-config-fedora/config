@@ -1,0 +1,25 @@
+# Fedora IoT Kiosk Build Configuration
+# Used by build-fedora.sh
+
+# Image naming
+IMAGE_NAME="razem-kiosk-fedora"
+IMAGE_VERSION="1.0"
+
+# Container configuration
+CONTAINER_NAME="localhost/${IMAGE_NAME}"
+BASE_IMAGE="quay.io/fedora/fedora-iot:41"
+
+# Build configuration
+OUTPUT_DIR="output"
+OUTPUT_TYPE="raw"  # raw disk image format
+
+# Compression settings
+COMPRESS_XZ=1
+XZ_THREADS=0  # 0 = auto-detect CPU threads
+XZ_LEVEL=9    # Maximum compression
+
+# Target architecture
+ARCH="aarch64"
+
+# Platform support
+PLATFORMS="Raspberry Pi 3B/3B+ and Pi 4 (64-bit ARM)"
