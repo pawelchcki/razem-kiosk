@@ -105,21 +105,30 @@ nix run
 
 ## CI/CD Integration
 
-### GitHub Actions Example
+This project includes a GitHub Actions workflow (`.github/workflows/nix.yml`) that automatically:
 
-```yaml
-name: Format Check
-on: [push, pull_request]
+1. **Flake Check** - Verifies flake is valid and all checks pass
+2. **Formatting** - Ensures code is properly formatted
+3. **Dev Shell** - Validates development environment builds correctly
 
-jobs:
-  format:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: DeterminateSystems/nix-installer-action@v9
-      - uses: DeterminateSystems/magic-nix-cache-action@v3
-      - name: Check formatting
-        run: nix flake check
+The workflow uses Determinate Systems actions for:
+- Fast, reliable Nix installation
+- Intelligent build caching (Magic Nix Cache)
+- Reduced CI times through binary cache
+
+### Running Locally
+
+Before pushing, verify CI will pass:
+
+```bash
+# Run all checks
+nix flake check
+
+# Check formatting
+nix fmt -- --check --fail-on-change
+
+# Build dev shell
+nix develop --command echo "Success"
 ```
 
 ## Flake Outputs

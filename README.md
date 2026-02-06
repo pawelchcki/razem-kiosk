@@ -1,5 +1,7 @@
 # Razem Kiosk - Raspberry Pi Display System
 
+[![Nix CI](https://github.com/pawelchcki/razem-kiosk/workflows/Nix%20CI/badge.svg)](https://github.com/pawelchcki/razem-kiosk/actions/workflows/nix.yml)
+
 A minimal, robust image slideshow system for Raspberry Pi that boots directly to a framebuffer image viewer with no desktop environment. Designed for reliability, simplicity, and "immortal" operation with read-only filesystem protection.
 
 Perfect for digital signage, information displays, and kiosk applications.

@@ -1,0 +1,85 @@
+name: Nix CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  nix-flake-check:
+    name: Nix Flake Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false  # Don't need pi-gen for flake check
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v15
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Check flake
+        run: nix flake check --show-trace
+
+      - name: Check flake metadata
+        run: nix flake metadata
+
+  formatting:
+    name: Code Formatting
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v15
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Check formatting
+        run: |
+          nix fmt -- --check --fail-on-change
+          if [ $? -ne 0 ]; then
+            echo "::error::Code is not formatted. Run 'nix fmt' locally to fix."
+            exit 1
+          fi
+
+  devshell:
+    name: Dev Shell Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+
+      - name: Install Nix
+        uses: DeterminateSystems/nix-installer-action@v15
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Nix Cache
+        uses: DeterminateSystems/magic-nix-cache-action@v8
+
+      - name: Build dev shell
+        run: nix develop --command echo "Dev shell built successfully"
+
+      - name: Verify tools available
+        run: |
+          nix develop --command shellcheck --version
+          nix develop --command shfmt --version
+          nix develop --command treefmt --version
