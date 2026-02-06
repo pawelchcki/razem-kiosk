@@ -1,6 +1,7 @@
 # Razem Kiosk - Raspberry Pi Display System
 
 [![Nix CI](https://github.com/pawelchcki/razem-kiosk/workflows/Nix%20CI/badge.svg)](https://github.com/pawelchcki/razem-kiosk/actions/workflows/nix.yml)
+[![Build Images](https://github.com/pawelchcki/razem-kiosk/workflows/Build%20Kiosk%20Images/badge.svg)](https://github.com/pawelchcki/razem-kiosk/actions/workflows/build-images.yml)
 
 A minimal, robust image slideshow system for Raspberry Pi that boots directly to a framebuffer image viewer with no desktop environment. Designed for reliability, simplicity, and "immortal" operation with read-only filesystem protection.
 
@@ -12,16 +13,20 @@ Perfect for digital signage, information displays, and kiosk applications.
 - 🛡️ **Immortal Mode**: Read-only filesystem survives power loss and SD card corruption
 - ⌨️ **Manual Navigation**: Arrow keys control image browsing (no auto-advance)
 - 🎯 **Minimal**: No desktop environment, X11, or unnecessary services
-- 📦 **Lightweight**: Runs on Raspberry Pi OS Lite with minimal packages
+- 📦 **Lightweight**: Runs on Raspberry Pi OS Lite or Fedora IoT with minimal packages
 - 🔧 **Easy Maintenance**: Simple scripts for updates and configuration changes
+- 🐧 **Two Distributions**: Choose Raspberry Pi OS (Debian) or Fedora IoT (RPM-based)
 
 ## Hardware Requirements
 
-- **Raspberry Pi 4** (Model B recommended)
+- **Raspberry Pi**:
+  - Raspberry Pi 3B/3B+ (64-bit, 1GB RAM)
+  - Raspberry Pi 4 Model B (2GB+ RAM recommended)
+  - Raspberry Pi 400
 - **SD Card**: 8GB minimum, 16GB recommended
 - **Display**: HDMI-compatible monitor or TV
 - **USB Keyboard**: For image navigation
-- **Power Supply**: Official Raspberry Pi 4 power supply
+- **Power Supply**: Official Raspberry Pi power supply (3A for Pi 4, 2.5A for Pi 3+)
 
 ## Quick Start
 
@@ -29,66 +34,76 @@ Perfect for digital signage, information displays, and kiosk applications.
 
 **Fastest way to get started - just flash and boot!**
 
-1. **Download** the latest pre-built image:
-   - [Get latest release](https://github.com/razem/razem-kiosk/releases)
-   - File: `razem-kiosk-YYYY-MM-DD.img.zip`
+Choose your distribution:
 
-2. **Flash** to SD card using [Raspberry Pi Imager](https://www.raspberrypi.com/software/):
-   - Choose OS → Use custom → Select downloaded `.img` file
-   - Choose Storage → Select your SD card
-   - Write
+#### Raspberry Pi OS (Debian-based)
+Best for Pi 4, familiar Debian environment
 
-3. **Boot** your Raspberry Pi (boots directly to kiosk, no installation needed!)
-
+1. **Download**: [razem-kiosk-YYYY-MM-DD.img.zip](https://github.com/razem/razem-kiosk/releases)
+2. **Flash** using [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
+3. **Boot** your Raspberry Pi
 4. **Add images** via SSH:
    ```bash
    ssh pi@kiosk.local  # password: raspberry
    sudo cp /path/to/images/*.jpg /opt/kiosk/images/
    sudo systemctl restart kiosk-display.service
    ```
-
 5. **Enable immortal mode**:
    ```bash
    sudo kiosk-overlay enable
    sudo reboot
    ```
 
+#### Fedora IoT (RPM-based)
+Best for Pi 3+, built-in immutability, modern updates
+
+1. **Download**: [razem-kiosk-fedora-YYYY-MM-DD.raw.xz](https://github.com/razem/razem-kiosk/releases)
+2. **Flash** to SD card:
+   ```bash
+   xz -d razem-kiosk-fedora-*.raw.xz
+   sudo dd if=razem-kiosk-fedora-*.raw of=/dev/sdX bs=4M status=progress conv=fsync
+   ```
+3. **Boot** your Raspberry Pi
+4. **Add images** via SSH:
+   ```bash
+   ssh pi@kiosk.local  # password: raspberry
+   sudo cp /path/to/images/*.jpg /opt/kiosk/images/
+   sudo systemctl restart kiosk-display.service
+   ```
+5. **System is already immutable** (rpm-ostree) - no additional setup needed!
+
 Done! Your kiosk is ready and immortal.
 
 ### Option 2: Manual Installation
 
-If you prefer to install on existing Raspberry Pi OS:
+If you prefer to install on existing system:
 
-1. **Flash Raspberry Pi OS Lite (64-bit)** to your SD card:
-   https://www.raspberrypi.com/software/operating-systems/
-
+#### On Raspberry Pi OS:
+1. **Flash Raspberry Pi OS Lite (64-bit)**: https://www.raspberrypi.com/software/
 2. **Boot and install**:
    ```bash
    git clone https://github.com/razem/razem-kiosk.git
    cd razem-kiosk
    sudo ./scripts/install-kiosk.sh
    ```
+3. **Add images** and **enable immortal mode** (see above)
 
-3. **Add images**:
+#### On Fedora IoT:
+1. **Flash Fedora IoT ARM**: https://fedoraproject.org/iot/
+2. **Boot and install**:
    ```bash
-   sudo cp /path/to/images/*.jpg /opt/kiosk/images/
+   git clone https://github.com/razem/razem-kiosk.git
+   cd razem-kiosk
+   sudo ./scripts/install-kiosk-fedora.sh
    ```
-
-4. **Test**:
-   ```bash
-   sudo systemctl start kiosk-display.service
-   ```
-
-5. **Enable immortal mode**:
-   ```bash
-   sudo kiosk-overlay enable
-   sudo reboot
-   ```
+3. **Reboot** to apply rpm-ostree changes, then run installer again
+4. **Add images** (system is already immutable via rpm-ostree)
 
 ## Building Custom Image
 
 Want to customize the image or build your own?
 
+### Build Raspberry Pi OS Image
 ```bash
 # Clone with submodules
 git clone --recursive https://github.com/razem/razem-kiosk.git
@@ -98,6 +113,24 @@ cd razem-kiosk
 ./build.sh
 
 # Output: razem-kiosk-YYYY-MM-DD.img
+```
+
+### Build Fedora IoT Image
+```bash
+# Clone repository
+git clone https://github.com/razem/razem-kiosk.git
+cd razem-kiosk
+
+# Build image (requires Podman, ~20-40 minutes)
+./build.sh --fedora
+
+# Or use Fedora-specific script
+./build-fedora.sh
+
+# Output: razem-kiosk-fedora-YYYY-MM-DD.raw.xz
+```
+
+See [Building Documentation](docs/building.md) for Raspberry Pi OS or [Fedora IoT Building Guide](docs/building-fedora.md) for detailed instructions.
 ```
 
 See [Building Guide](docs/building.md) for detailed instructions.

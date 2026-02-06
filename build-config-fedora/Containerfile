@@ -1,0 +1,36 @@
+FROM --platform=linux/arm64 quay.io/fedora/fedora-iot:41
+
+# Install packages (fbida contains fbi binary, kbd for keyboard tools)
+RUN rpm-ostree install fbida kbd && ostree container commit
+
+# Copy Fedora-specific kiosk scripts
+COPY build-config-fedora/files/opt/kiosk/ /opt/kiosk/
+
+# Copy shared systemd service file
+COPY image-files/etc/systemd/system/kiosk-display.service /etc/systemd/system/
+
+# Copy default branding images
+COPY image-files/opt/kiosk/images/ /opt/kiosk/images/
+
+# Set permissions and create directories
+RUN chmod 755 /opt/kiosk/scripts/*.sh && \
+    mkdir -p /opt/kiosk/logs && \
+    chmod 644 /opt/kiosk/images/*.png && \
+    ln -sf /opt/kiosk/scripts/overlayfs-setup.sh /usr/local/bin/kiosk-overlay
+
+# Enable kiosk service, disable unnecessary services
+RUN systemctl enable kiosk-display.service && \
+    systemctl disable bluetooth.service avahi-daemon.service
+
+# Configure auto-login for pi user
+RUN useradd -m -G wheel pi && \
+    echo 'pi:raspberry' | chpasswd && \
+    mkdir -p /etc/systemd/system/getty@tty1.service.d && \
+    echo -e '[Service]\nExecStart=\nExecStart=-/sbin/agetty --autologin pi --noclear %I $TERM' \
+    > /etc/systemd/system/getty@tty1.service.d/autologin.conf
+
+# Note: Kernel arguments (kargs) are applied after deployment, not during build
+# Users can add them post-installation with:
+# rpm-ostree kargs --append='quiet' --append='loglevel=0' etc.
+
+RUN ostree container commit

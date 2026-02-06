@@ -1,0 +1,115 @@
+name: Build Kiosk Images
+
+on:
+  push:
+    branches: [main, fedora-iot]
+  workflow_dispatch:  # Manual trigger
+  schedule:
+    - cron: '0 2 * * 0'  # Weekly Sunday 2 AM UTC
+
+jobs:
+  build-fedora-iot:
+    name: Build Fedora IoT Container
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU for ARM64
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Install Podman
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y podman
+
+      - name: Build Fedora IoT Container
+        run: |
+          podman build --platform=linux/arm64 --isolation=chroot \
+            -f build-config-fedora/Containerfile \
+            -t razem-kiosk-fedora:${{ github.sha }} .
+
+      - name: Save container as OCI archive
+        run: |
+          podman save razem-kiosk-fedora:${{ github.sha }} \
+            -o razem-kiosk-fedora-container.tar
+
+      - name: Compress container archive
+        run: |
+          xz -9 -T0 razem-kiosk-fedora-container.tar
+
+      - name: Get artifact name
+        id: artifact
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          echo "name=fedora-iot-container-${SHORT_SHA}-${DATE}" >> $GITHUB_OUTPUT
+          echo "file=razem-kiosk-fedora-container.tar.xz" >> $GITHUB_OUTPUT
+
+      - name: Upload Fedora IoT Container Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: ${{ steps.artifact.outputs.file }}
+          retention-days: 7
+          compression-level: 0  # Already compressed with xz
+
+  build-raspberry-pi-os:
+    name: Build Raspberry Pi OS Image
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout code with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y coreutils quilt parted qemu-user-static debootstrap zerofree zip dosfstools libarchive-tools libcap2-bin rsync grep udev xz-utils curl xxd file kmod bc bison flex libssl-dev
+
+      - name: Build Pi OS Image
+        run: |
+          sudo ./build.sh --yes
+
+      - name: Find built image
+        id: find_image
+        run: |
+          IMAGE=$(find . -name "razem-kiosk-*.img" -type f | head -n1)
+          if [ -z "$IMAGE" ]; then
+            echo "::error::No image file found"
+            exit 1
+          fi
+          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          echo "Found image: $IMAGE"
+
+      - name: Compress image
+        run: |
+          xz -9 -T0 "${{ steps.find_image.outputs.image }}"
+
+      - name: Get artifact name
+        id: artifact
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          COMPRESSED="${{ steps.find_image.outputs.image }}.xz"
+          echo "name=raspberry-pi-os-image-${SHORT_SHA}-${DATE}" >> $GITHUB_OUTPUT
+          echo "file=${COMPRESSED}" >> $GITHUB_OUTPUT
+
+      - name: Upload Pi OS Image Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: ${{ steps.artifact.outputs.file }}
+          retention-days: 7
+          compression-level: 0  # Already compressed with xz
+
+      - name: Image size info
+        run: |
+          ls -lh "${{ steps.artifact.outputs.file }}"
