@@ -9,20 +9,30 @@ show_usage() {
   echo "Usage: $0 [OPTIONS]"
   echo ""
   echo "Options:"
-  echo "  -y, --yes    Skip confirmation prompt"
-  echo "  -h, --help   Show this help message"
+  echo "  -y, --yes     Skip confirmation prompt"
+  echo "  --clean       Clean work directory (start from scratch)"
+  echo "  -h, --help    Show this help message"
   echo ""
-  echo "Example:"
-  echo "  $0           # Interactive build (asks for confirmation)"
-  echo "  $0 -y        # Non-interactive build (auto-confirm)"
+  echo "Note: By default, builds continue from where they left off."
+  echo "      Use --clean to start completely fresh."
+  echo ""
+  echo "Examples:"
+  echo "  $0              # Continue previous build (interactive)"
+  echo "  $0 -y           # Continue previous build (auto-confirm)"
+  echo "  $0 -y --clean   # Start fresh build (auto-confirm)"
 }
 
 # Parse arguments
 SKIP_CONFIRM=false
+CLEAN_BUILD=false  # Default: continue from previous build
 while [[ $# -gt 0 ]]; do
   case $1 in
     -y|--yes)
       SKIP_CONFIRM=true
+      shift
+      ;;
+    --clean)
+      CLEAN_BUILD=true
       shift
       ;;
     -h|--help)
@@ -85,18 +95,24 @@ echo ""
 
 cd pi-gen
 
-# Clean previous builds
-echo "Cleaning previous build artifacts..."
-rm -rf work deploy
+# Clean previous builds only if --clean flag is set
+if [ "$CLEAN_BUILD" = true ]; then
+    echo "Cleaning previous build artifacts (--clean specified)..."
+    rm -rf work deploy stage-kiosk
+else
+    echo "Continuing from previous build (use --clean to start fresh)..."
+    # Only remove stage-kiosk to refresh it with latest changes
+    rm -rf stage-kiosk
+fi
 
 # Copy configuration
 echo "Copying build configuration..."
 cp ../build-config/config ./config
 
-# Create symlink to custom stage
-echo "Linking custom kiosk stage..."
-rm -f stage-kiosk
-ln -sf ../build-config/stage-kiosk ./stage-kiosk
+# Copy custom stage (not symlink, for Docker compatibility)
+echo "Copying custom kiosk stage..."
+rm -rf stage-kiosk
+cp -r ../build-config/stage-kiosk ./stage-kiosk
 
 # Build the image
 echo ""
@@ -106,10 +122,20 @@ echo ""
 
 if [ "$BUILD_METHOD" = "docker" ]; then
     # Use Docker build (recommended)
-    ./build-docker.sh
+    if [ "$CLEAN_BUILD" = false ]; then
+        # Continue from previous build
+        CONTINUE=1 ./build-docker.sh
+    else
+        # Clean build
+        ./build-docker.sh
+    fi
 else
     # Use native build
-    sudo ./build.sh
+    if [ "$CLEAN_BUILD" = false ]; then
+        CONTINUE=1 sudo ./build.sh
+    else
+        sudo ./build.sh
+    fi
 fi
 
 # Check if build succeeded

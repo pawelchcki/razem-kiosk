@@ -8,6 +8,9 @@ IMG_NAME='razem-kiosk'
 RELEASE='bookworm'
 DEPLOY_COMPRESSION='zip'
 
+# Build 64-bit (arm64) image
+TARGET_ARCH='64'
+
 # Target system configuration
 TARGET_HOSTNAME='kiosk'
 TIMEZONE_DEFAULT='Europe/Warsaw'
@@ -24,9 +27,6 @@ FIRST_USER_PASS='raspberry'
 
 # Stage selection - skip desktop stages for minimal image
 STAGE_LIST="stage0 stage1 stage2 stage-kiosk"
-
-# Build options
-CLEAN=1
 
 # Disable IPv6 (reduces boot time)
 DISABLE_IPV6=1
